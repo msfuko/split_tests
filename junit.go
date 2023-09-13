@@ -11,7 +11,7 @@ import (
 
 type junitXML struct {
 	TestCases []struct {
-		File string  `xml:"file,attr"`
+		File string  `xml:"classname,attr"`
 		Time float64 `xml:"time,attr"`
 	} `xml:"testcase"`
 }
