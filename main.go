@@ -54,9 +54,6 @@ func addNewFiles(fileTimes map[string]float64, currentFileSet map[string]bool) {
 		averageFileTime = 1.0
 	}
 
-	for key, value := range fileTimes {
-		printMsg(fmt.Sprintf("Key %s Value %s\n", key, value))
-	}
 	for file := range currentFileSet {
 		if _, isSet := fileTimes[file]; isSet {
 			continue

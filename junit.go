@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/xml"
-	"fmt"
 	"io"
 	"os"
 	"path"
@@ -79,7 +78,7 @@ func getFileTimesFromJUnitXML(fileTimes map[string]float64) {
 			printMsg("using test times from JUnit report %s\n", junitFilename)
 			xmlData, err := io.ReadAll(file)
 			if err != nil {
-				fmt.Println("Error reading file:", err)
+				fatalMsg("Error reading file: %v\n", err)
 				return
 			}
 			var testsuites Testsuites
@@ -87,13 +86,11 @@ func getFileTimesFromJUnitXML(fileTimes map[string]float64) {
 			// Unmarshal the XML data into the testsuites variable
 			err = xml.Unmarshal(xmlData, &testsuites)
 			if err != nil {
-				fmt.Println("Error unmarshaling XML:", err)
+				fatalMsg("Error unmarshaling XML: %v\n", err)
 				return
 			}
 
 			for _, suite := range testsuites.Testsuite {
-				fmt.Println("Testsuite Name:", suite.Name)
-				fmt.Println("Number of Testcases:", len(suite.Testcases))
 				for _, testcase := range suite.Testcases {
 					fileTimes[testcase.ClassName] = testsuites.Time
 				}
