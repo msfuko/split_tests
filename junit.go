@@ -11,9 +11,36 @@ import (
 
 type junitXML struct {
 	TestCases []struct {
-		File string  `xml:"classname,attr"`
+		File string  `xml:"file,attr"`
 		Time float64 `xml:"time,attr"`
 	} `xml:"testcase"`
+}
+type Testcase struct {
+	Name      string `xml:"name,attr"`
+	ClassName string `xml:"classname,attr"`
+	Time      string `xml:"time,attr"`
+}
+
+type Testsuite struct {
+	Name      string     `xml:"name,attr"`
+	Timestamp string     `xml:"timestamp,attr"`
+	Hostname  string     `xml:"hostname,attr"`
+	Tests     int        `xml:"tests,attr"`
+	Failures  int        `xml:"failures,attr"`
+	Skipped   int        `xml:"skipped,attr"`
+	Time      float64    `xml:"time,attr"`
+	Errors    int        `xml:"errors,attr"`
+	Testcases []Testcase `xml:"testcase"`
+}
+type Testsuites struct {
+	Id        string      `xml:"id,attr"`
+	Name      string      `xml:"name,attr"`
+	Tests     int         `xml:"tests,attr"`
+	Failures  int         `xml:"failures,attr"`
+	Skipped   int         `xml:"skipped,attr"`
+	Errors    int         `xml:"errors,attr"`
+	Time      float64     `xml:"time,attr"`
+	Testsuite []Testsuite `xml:"testsuite"`
 }
 
 func loadJUnitXML(reader io.Reader) *junitXML {
@@ -47,9 +74,28 @@ func getFileTimesFromJUnitXML(fileTimes map[string]float64) {
 			if err != nil {
 				fatalMsg("failed to open junit xml: %v\n", err)
 			}
+			defer file.Close()
 			printMsg("using test times from JUnit report %s\n", junitFilename)
-			addFileTimesFromIOReader(fileTimes, file)
-			file.Close()
+			xmlData, err := io.ReadAll(file)
+			if err != nil {
+				fatalMsg("Error reading file: %v\n", err)
+				return
+			}
+			var testsuites Testsuites
+
+			// Unmarshal the XML data into the testsuites variable
+			err = xml.Unmarshal(xmlData, &testsuites)
+			if err != nil {
+				fatalMsg("Error unmarshaling XML: %v\n", err)
+				return
+			}
+
+			for _, suite := range testsuites.Testsuite {
+				for _, testcase := range suite.Testcases {
+					fileTimes[testcase.ClassName] = testsuites.Time
+				}
+			}
+
 		}
 	} else {
 		printMsg("using test times from JUnit report at stdin\n")
